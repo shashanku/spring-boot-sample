@@ -19,8 +19,7 @@ public class AppConstant {
 
 	public static final String DEFAULT_OTP = "0000";
 
-
-	
+	public static final String X_REQUEST_ID = "requestId";
 
 	public static enum USER_EVENTS {
 		CREATE_USER, APPROVE_USER, CREATE_COMMODITY, UPDATE_COMMODITY, ISSUE_TOKEN, DELETE_TOKEN, UPDATE_EXCHANGE_RATE,
@@ -56,5 +55,20 @@ public class AppConstant {
 	public static final String X_SACCO_ID = "x-sacco-id";
 	public static final String X_ACTION_CODE = "x-action-code";
 	public static final String INSERT_USER_REQUEST = "INSERT INTO `natraj`.`user_details` (`email`,`contact`,`user_id`,`user_type`,`is_approved`,`status`,`exchange_rate`,`total_points`,`is_apply_exchange_rate`,`created_by`,`created_timestamp`,`updated_by`,`updated_timestamp`) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)";
+	// public static final String INSERT_TOKEN_REQUEST = "INSERT INTO
+	// `natraj`.`token_details`
+	// (`token_no`,`commodity_code`,`status`,`is_redeemed`,`bill_no`,`is_valid_till`,`created_by`,`created_timestamp`,`updated_by`,`updated_timestamp`)
+	// VALUES (?,?,?,?,?,?,?,?,?,?)";
+	public static final String INSERT_TOKEN_REQUEST = "INSERT INTO `natraj`.`token_details` (`token_no`,`commodity_code`,`status`,`is_redeemed`,`bill_no`,`is_valid_till`,`created_by`,`created_timestamp`,`updated_by`,`updated_timestamp`)  SELECT ?,commodity_code,?,?,?,?,?,?,?,?  from natraj.commodity_details where commodity_code = ?";
+
 	public static final String INSERT_EVENT_REQUEST = "INSERT INTO `natraj`.`event_details` (`event_name`,`event_type`,`is_loggable`,`status`,`created_by`,`created_timestamp`,`updated_by`,`updated_timestamp`) VALUES (?,?,?,?,?,?,?,?)";
+	public static final String INSERT_COMMODITY_REQUEST = "INSERT INTO `natraj`.`commodity_details` (`commodity_code`,`commodity_type`,`description`,`points_generated`,`status`,`created_by`,`created_timestamp`,`updated_by`,`updated_timestamp`) VALUES (?,?,?,?,?,?,?,?,?)";
+
+	public static final String GET_TOKEN_DETAILS = "select td.token_no, td.commodity_code, cd.commodity_type,  cd.points_generated,cd.description from natraj.token_details td, natraj.commodity_details cd where cd.commodity_code = td.commodity_code  and cd.status = 1 and td.is_redeemed = 0 and td.status = 'A' and td.token_no = ?";
+	public static final String INSERT_TRANSACTION = "INSERT INTO transactions (from_user_id,to_user_id,token_no,points_accrued,total_points,event_type,event_name,commodity_code,remarks,created_by,created_timestamp,updated_by,updated_timestamp) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)";
+	public static final String INSET_AUDIT_LOG = "INSERT INTO natraj.audit_log (event_name,event_type,transaction_id,remarks,user_id,created_by,created_timestamp,updated_by,updated_timestamp) VALUES (?,?,?,?,?,?,?,?,?)";
+	public static final Long DEF_TOKEN = -1 * 1L;
+	public static final String TXN_ID = "transaction_id";
+	public static final String AUDIT_ID = "audit_id";
+	public static final String ERROR_ID = "error_id";
 }

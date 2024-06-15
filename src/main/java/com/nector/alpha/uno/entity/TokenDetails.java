@@ -232,6 +232,19 @@ public class TokenDetails {
 		this.updatedTimestamp = updatedTimestamp;
 	}
 
+	/**
+	 * @param user
+	 * @param ts
+	 */
+	public void setAudits(String user, Timestamp ts) {
+		this.createdBy = "SYSTEM";
+		this.updatedBy = "SYSTEM";
+
+		this.createdTimestamp = ts;
+		this.updatedTimestamp = ts;
+
+	}
+
 	@Override
 	public String toString() {
 		return "TokenDetails [id=" + id + ", tokenNo=" + tokenNo + ", commodityCode=" + commodityCode + ", status="

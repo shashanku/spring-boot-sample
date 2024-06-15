@@ -288,6 +288,15 @@ public class UserDetails {
 		this.updatedTimestamp = updatedTimestamp;
 	}
 
+	public void setAudits(String user, Timestamp ts) {
+		this.createdBy = "SYSTEM";
+		this.updatedBy = "SYSTEM";
+
+		this.createdTimestamp = ts;
+		this.updatedTimestamp = ts;
+
+	}
+
 	@Override
 	public String toString() {
 		return "UserDetails [ id=" + id + ", email=" + email + ", contact=" + contact + ", userId=" + userId

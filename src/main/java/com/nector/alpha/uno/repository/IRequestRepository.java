@@ -31,7 +31,7 @@ public interface IRequestRepository {
 
 	public int updateCommodityPoints(final String jsonBody) throws IOException;
 
-	public Transaction transact(Transaction txn) throws IOException;
+	//public Transaction transact(Transaction txn) throws IOException;
 
 	public int redeem(final String jsonBody) throws IOException;
 

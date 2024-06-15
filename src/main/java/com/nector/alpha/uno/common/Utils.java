@@ -15,15 +15,15 @@ import java.util.concurrent.Future;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 /**
  * @author shash
  *
  */
 public class Utils {
-	private static final Logger LOG = LoggerFactory.getLogger(Utils.class);
+	private static final Logger LOG = LogManager.getLogger(Utils.class);
 
 	// Get ExecutorService from Executors utility class, thread pool size is 10
 	private static ExecutorService executor = Executors.newFixedThreadPool(10);

@@ -4,8 +4,8 @@ import java.io.IOException;
 import java.sql.Timestamp;
 import java.util.Map;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -19,12 +19,12 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.google.gson.Gson;
 import com.nector.alpha.uno.common.ApplicationHeaders;
+import com.nector.alpha.uno.entity.CommodityDetails;
 import com.nector.alpha.uno.entity.EventDetails;
 import com.nector.alpha.uno.entity.TenantDetails;
 import com.nector.alpha.uno.entity.TokenDetails;
-import com.nector.alpha.uno.entity.Transaction;
 import com.nector.alpha.uno.entity.UserDetails;
-import com.nector.alpha.uno.interfaces.ICommonOperation;
+import com.nector.alpha.uno.req.SaveTxnVO;
 import com.nector.alpha.uno.service.CommonService;
 
 /**
@@ -34,8 +34,8 @@ import com.nector.alpha.uno.service.CommonService;
 @RestController
 @Controller("commonController")
 @RequestMapping("/natraj/v1")
-public class CommonController implements ICommonOperation {
-	private static final Logger LOG = LoggerFactory.getLogger(CommonController.class);
+public class CommonController {
+	private static final Logger LOG = LogManager.getLogger(CommonController.class);
 	private static final Gson gson = new Gson();
 
 	@Autowired
@@ -43,7 +43,6 @@ public class CommonController implements ICommonOperation {
 
 	@GetMapping("/simple-request")
 	public String simpleRequest() {
-		// In this case, we return the plain text response "ok"
 		return "ok";
 	}
 
@@ -53,6 +52,8 @@ public class CommonController implements ICommonOperation {
 	// The value will be stored in the annotated variable
 	public String echo(@RequestParam(name = "text") String echoText) {
 		// The response will be "Echo: " followed by the param that was passed in
+
+		LOG.debug("Request Recieved");
 		return "Echo: " + echoText;
 	}
 
@@ -64,19 +65,15 @@ public class CommonController implements ICommonOperation {
 		return "Echo in path: " + echoText;
 	}
 
-	@PostMapping("/save-user")
+	@PostMapping("/user/create")
 	public UserDetails saveUser(@RequestBody UserDetails userDetails, @RequestHeader Map<String, String> allHeaders)
 			throws IOException {
-
+// https://www.bezkoder.com/spring-boot-login-example-mysql/
 		String apiKey = allHeaders.get(ApplicationHeaders.X_API_KEY);
 		LOG.info("Request recieved with APIKEY", apiKey);
 
+		userDetails.setAudits("SYSTEM", new Timestamp(System.currentTimeMillis()));
 		LOG.info("User input: {}", userDetails.toString());
-		userDetails.setCreatedBy("SYSTEM");
-		userDetails.setUpdatedBy("SYSTEM");
-
-		userDetails.setCreatedTimestamp(new Timestamp(System.currentTimeMillis()));
-		userDetails.setUpdatedTimestamp(new Timestamp(System.currentTimeMillis()));
 
 		return commonService.saveUser(userDetails);
 	}
@@ -86,130 +83,105 @@ public class CommonController implements ICommonOperation {
 	 * @return
 	 * @throws IOException
 	 */
-	@PostMapping("/save-tenant")
+	@PostMapping("/tenant/create")
 	public TenantDetails saveUser(@RequestBody TenantDetails tenantDetails) throws IOException {
 
 		LOG.info("User input: {}", tenantDetails.toString());
-		tenantDetails.setCreatedBy("SYSTEM");
-		tenantDetails.setUpdatedBy("SYSTEM");
 
-		tenantDetails.setCreatedTimestamp(new Timestamp(System.currentTimeMillis()));
-		tenantDetails.setUpdatedTimestamp(new Timestamp(System.currentTimeMillis()));
+		tenantDetails.setAudits("SYSTEM", new Timestamp(System.currentTimeMillis()));
+		LOG.info("User input: {}", tenantDetails.toString());
 
 		return commonService.saveTenant(tenantDetails);
 	}
 
-	@Override
-	public int approveUser(String jsonBody) throws IOException {
-		// TODO Auto-generated method stub
-		return 0;
-	}
+	/**
+	 * @param tenantDetails
+	 * @return
+	 * @throws IOException
+	 */
+	@PostMapping("/commodity/create")
+	public CommodityDetails saveCommodity(@RequestBody CommodityDetails commodityDetails) throws IOException {
 
-	@Override
-	public int createCommodity(String jsonBody) throws IOException {
-		// TODO Auto-generated method stub
-		return 0;
-	}
-
-	@Override
-	public int updateCommodity(String jsonBody) throws IOException {
-		// TODO Auto-generated method stub
-		return 0;
-	}
-
-	@PostMapping("/save-transaction")
-	@Override
-	public TokenDetails issueToken(@RequestBody TokenDetails tokenDetails) throws IOException {
-		return commonService.issueToken(tokenDetails);
-	}
-
-	@Override
-	public int deleteToken(String jsonBody) throws IOException {
-		// TODO Auto-generated method stub
-		return 0;
-	}
-
-	@Override
-	public int updateExchangeRate(String jsonBody) throws IOException {
-		// TODO Auto-generated method stub
-		return 0;
-	}
-
-	@Override
-	public int updateCommodityPoints(String jsonBody) throws IOException {
-		// TODO Auto-generated method stub
-		return 0;
+		LOG.info("User input: {}", commodityDetails.toString());
+		return commonService.saveCommodity(commodityDetails, "SYSTEM");
 	}
 
 	/**
-	 *
+	 * @param tenantDetails
+	 * @return
+	 * @throws IOException
 	 */
-	@PostMapping("/save-transaction")
-	@Override
-	public Transaction transact(@RequestBody Transaction txn, @RequestHeader Map<String, String> allHeaders)
-			throws IOException {
-		LOG.info("User input: {}", txn.toString());
+	@PostMapping("/token/create")
+	public TokenDetails saveTokem(@RequestBody TokenDetails tokenDetails) throws IOException {
 
-		return commonService.saveTransaction(txn);
-	}
+		LOG.info("User input: {}", tokenDetails.toString());
 
-	@Override
-	public int redeem(String jsonBody) throws IOException {
-		// TODO Auto-generated method stub
-		return 0;
-	}
-
-	@Override
-	public int generateReport(String jsonBody) throws IOException {
-		// TODO Auto-generated method stub
-		return 0;
-	}
-
-	@Override
-	public int queryToken(String jsonBody) throws IOException {
-		// TODO Auto-generated method stub
-		return 0;
-	}
-
-	@Override
-	public int queryCommodity(String jsonBody) throws IOException {
-		// TODO Auto-generated method stub
-		return 0;
-	}
-
-	@Override
-	public int queryUser(String jsonBody) throws IOException {
-		// TODO Auto-generated method stub
-		return 0;
-	}
-
-	@Override
-	public int queryTxn(String jsonBody) throws IOException {
-		// TODO Auto-generated method stub
-		return 0;
-	}
-
-	@Override
-	public int queryUserTxn(String jsonBody) throws IOException {
-		// TODO Auto-generated method stub
-		return 0;
-	}
-
-	@Override
-	public int saveUser(String jsonBody) throws IOException {
-		// TODO Auto-generated method stub
-		return 0;
+		return commonService.issueToken(tokenDetails, "SYSTEM");
 	}
 
 	/**
 	 * @param eventDetails
 	 * @return
 	 */
-	@PostMapping("/save-event")
+	@PostMapping("/event/create")
 	public EventDetails saveEvent(@RequestBody EventDetails eventDetails, @RequestHeader Map<String, String> allHeaders)
 			throws IOException {
 
 		return commonService.saveEvent(eventDetails);
+	}
+
+	/**
+	 * @param eventDetails
+	 * @return
+	 */
+	@PostMapping("/txn/create")
+	public Object saveTransaction(@RequestBody SaveTxnVO userTxn, @RequestHeader Map<String, String> allHeaders)
+			throws IOException {
+		String apiKey = allHeaders.get(ApplicationHeaders.X_API_KEY);
+		LOG.info("Request recieved with APIKEY", apiKey);
+
+		return commonService.saveTransaction(userTxn);
+	}
+
+	/**
+	 * @param eventDetails
+	 * @return
+	 */
+	@PostMapping("/txn/list")
+	public Object listTransaction(@RequestBody EventDetails eventDetails, @RequestHeader Map<String, String> allHeaders)
+			throws IOException {
+
+		return commonService.saveEvent(eventDetails);
+	}
+
+	@PostMapping("/login")
+	public UserDetails login(@RequestBody UserDetails userDetails, @RequestHeader Map<String, String> allHeaders)
+			throws IOException {
+
+		String apiKey = allHeaders.get(ApplicationHeaders.X_API_KEY);
+		LOG.info("Request recieved with APIKEY", apiKey);
+
+		userDetails.setAudits("SYSTEM", new Timestamp(System.currentTimeMillis()));
+		LOG.info("User input: {}", userDetails.toString());
+
+		return commonService.saveUser(userDetails);
+	}
+
+	/**
+	 * @param eventDetails
+	 * @return
+	 */
+	@PostMapping("/user/approvals")
+	public Object pendingApprovals(@RequestBody EventDetails eventDetails,
+			@RequestHeader Map<String, String> allHeaders) throws IOException {
+
+		return commonService.saveEvent(eventDetails);
+	}
+
+	@GetMapping("/report/admin")
+	public String adminReport(@RequestParam(name = "userId") String echoText) {
+		LOG.debug("Request Recieved");
+		return "Echo: " + echoText;
 	}
 
 }

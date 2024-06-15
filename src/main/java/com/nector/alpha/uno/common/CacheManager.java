@@ -3,8 +3,8 @@ package com.nector.alpha.uno.common;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Value;
 
 import com.nector.alpha.uno.entity.EventDetails;
@@ -15,7 +15,7 @@ import com.nector.alpha.uno.entity.EventDetails;
  */
 
 public class CacheManager {
-	private static final Logger LOG = LoggerFactory.getLogger(CacheManager.class);
+	private static final Logger LOG = LogManager.getLogger(CacheManager.class);
 
 	private Map<String, Boolean> isOperationOTPEnabled = new HashMap<>();
 	private Map<String, Class> operationClassResponseMap = new HashMap<>();

@@ -174,6 +174,15 @@ public class TenantDetails {
 		this.updatedTimestamp = updatedTimestamp;
 	}
 
+	public void setAudits(String user, Timestamp ts) {
+		this.createdBy = "SYSTEM";
+		this.updatedBy = "SYSTEM";
+
+		this.createdTimestamp = ts;
+		this.updatedTimestamp = ts;
+
+	}
+
 	@Override
 	public String toString() {
 		return "TenantDetails [id=" + id + ", name=" + name + ", address=" + address + ", apiKey=" + apiKey

@@ -23,6 +23,9 @@ public class CommodityDetails {
 	@SerializedName("points_generated")
 	private Float pointsGenerated;
 
+	@SerializedName("status")
+	private Integer status;
+
 	@SerializedName("created_by")
 	private String createdBy;
 
@@ -47,13 +50,14 @@ public class CommodityDetails {
 	 * @param commodityType
 	 * @param description
 	 * @param pointsGenerated
+	 * @param status
 	 * @param createdBy
 	 * @param createdTimestamp
 	 * @param updatedBy
 	 * @param updatedTimestamp
 	 */
 	public CommodityDetails(Long id, String commodityCode, String commodityType, String description,
-			Float pointsGenerated, String createdBy, Timestamp createdTimestamp, String updatedBy,
+			Float pointsGenerated, Integer status, String createdBy, Timestamp createdTimestamp, String updatedBy,
 			Timestamp updatedTimestamp) {
 		super();
 		this.id = id;
@@ -61,6 +65,7 @@ public class CommodityDetails {
 		this.commodityType = commodityType;
 		this.description = description;
 		this.pointsGenerated = pointsGenerated;
+		this.status = status;
 		this.createdBy = createdBy;
 		this.createdTimestamp = createdTimestamp;
 		this.updatedBy = updatedBy;
@@ -138,6 +143,33 @@ public class CommodityDetails {
 	}
 
 	/**
+	 * @return the status
+	 */
+	public Integer getStatus() {
+		return status;
+	}
+
+	/**
+	 * @param user
+	 * @param ts
+	 */
+	public void setAudits(String user, Timestamp ts) {
+		this.createdBy = "SYSTEM";
+		this.updatedBy = "SYSTEM";
+
+		this.createdTimestamp = ts;
+		this.updatedTimestamp = ts;
+
+	}
+
+	/**
+	 * @param status the status to set
+	 */
+	public void setStatus(Integer status) {
+		this.status = status;
+	}
+
+	/**
 	 * @return the createdBy
 	 */
 	public String getCreatedBy() {
@@ -196,9 +228,9 @@ public class CommodityDetails {
 	@Override
 	public String toString() {
 		return "CommodityDetails [id=" + id + ", commodityCode=" + commodityCode + ", commodityType=" + commodityType
-				+ ", description=" + description + ", pointsGenerated=" + pointsGenerated + ", createdBy=" + createdBy
-				+ ", createdTimestamp=" + createdTimestamp + ", updatedBy=" + updatedBy + ", updatedTimestamp="
-				+ updatedTimestamp + "]";
+				+ ", description=" + description + ", pointsGenerated=" + pointsGenerated + ", status=" + status
+				+ ", createdBy=" + createdBy + ", createdTimestamp=" + createdTimestamp + ", updatedBy=" + updatedBy
+				+ ", updatedTimestamp=" + updatedTimestamp + "]";
 	}
 
 }

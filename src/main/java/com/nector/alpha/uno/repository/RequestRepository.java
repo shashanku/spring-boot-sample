@@ -7,7 +7,9 @@ import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.sql.PreparedStatement;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import org.slf4j.Logger;
@@ -26,9 +28,12 @@ import com.nector.alpha.uno.entity.CommodityDetails;
 import com.nector.alpha.uno.entity.Employee;
 import com.nector.alpha.uno.entity.EventDetails;
 import com.nector.alpha.uno.entity.TenantDetails;
+import com.nector.alpha.uno.entity.TokenCommodityRec;
 import com.nector.alpha.uno.entity.TokenDetails;
-import com.nector.alpha.uno.entity.Transaction;
 import com.nector.alpha.uno.entity.UserDetails;
+import com.nector.alpha.uno.req.SaveTxnVO;
+
+import jakarta.transaction.Transactional;
 
 /**
  * @author shashank1.upadhyay
@@ -101,6 +106,58 @@ public class RequestRepository extends RequestCommonsParams implements IRequestR
 
 	}
 
+	/**
+	 * query: INSERT INTO `natraj`.`commodity_details`
+	 * (`commodity_code`,`commodity_type`,`description`,`points_generated`,`status`,`created_by`,`created_timestamp`,`updated_by`,`updated_timestamp`)
+	 * VALUES (?,?,?,?,?,?,?,?,?);
+	 * 
+	 * @param commodityDetails
+	 * @return
+	 * @throws IOException
+	 */
+	public CommodityDetails saveCommodity(CommodityDetails commodityDetails) throws IOException {
+
+		LOG.info("Request recieved for inserting commodityDetails for details:{}", commodityDetails.toString());
+
+		BigInteger retval = new BigInteger("-1");
+		KeyHolder keyHolder = new GeneratedKeyHolder();
+
+		try {
+
+			// ``,``,``,``,``,``,``,``,``,``,``,``,``) VALUES (?,?,?,?,?,?,?,?,?,?,?
+
+			jdbcTemplate.update(connection -> {
+				PreparedStatement ps = connection.prepareStatement(AppConstant.INSERT_COMMODITY_REQUEST,
+						PreparedStatement.RETURN_GENERATED_KEYS);
+
+				int i = 1;
+				ps.setString(i++, commodityDetails.getCommodityCode());// commodity_code
+				ps.setString(i++, commodityDetails.getCommodityType());// commodity_type
+				ps.setString(i++, commodityDetails.getDescription()); // description
+				ps.setFloat(i++, commodityDetails.getPointsGenerated());// points_generated
+				ps.setInt(i++, commodityDetails.getStatus());// status
+
+				ps.setString(i++, commodityDetails.getCreatedBy());// created_by
+				ps.setTimestamp(i++, commodityDetails.getCreatedTimestamp());// created_timestamp
+				ps.setString(i++, commodityDetails.getUpdatedBy());// updated_by
+				ps.setTimestamp(i++, commodityDetails.getUpdatedTimestamp());// updated_timestamp
+
+				return ps;
+			}, keyHolder);
+
+			retval = (java.math.BigInteger) keyHolder.getKey();
+
+		} catch (Exception e) {
+			LOG.error("Into exception while inserting user details req with message:{}", e.getMessage());
+		}
+
+		commodityDetails.setId(retval.longValue());
+		LOG.info("Request processed for inserting commodity details for generated Id:{} with  commodity:{}",
+				retval.longValue(), commodityDetails.toString());
+		return commodityDetails;
+
+	}
+
 	@Override
 	public int approveUser(String jsonBody) throws IOException {
 
@@ -134,15 +191,16 @@ public class RequestRepository extends RequestCommonsParams implements IRequestR
 				PreparedStatement ps = connection.prepareStatement(AppConstant.INSERT_USER_REQUEST,
 						PreparedStatement.RETURN_GENERATED_KEYS);
 
-				ps.setString(1, commodityDetails.getCommodityCode());// code
-				ps.setString(2, commodityDetails.getCommodityType());// type
-				ps.setString(3, commodityDetails.getDescription()); // description
-				ps.setFloat(4, commodityDetails.getPointsGenerated());// points
+				int i = 1;
+				ps.setString(i++, commodityDetails.getCommodityCode());// code
+				ps.setString(i++, commodityDetails.getCommodityType());// type
+				ps.setString(i++, commodityDetails.getDescription()); // description
+				ps.setFloat(i++, commodityDetails.getPointsGenerated());// points
 
-				ps.setString(5, commodityDetails.getCreatedBy());// created_by
-				ps.setTimestamp(6, commodityDetails.getCreatedTimestamp());// created_timestamp
-				ps.setString(7, commodityDetails.getUpdatedBy());// updated_by
-				ps.setTimestamp(8, commodityDetails.getUpdatedTimestamp());// updated_timestamp
+				ps.setString(i++, commodityDetails.getCreatedBy());// created_by
+				ps.setTimestamp(i++, commodityDetails.getCreatedTimestamp());// created_timestamp
+				ps.setString(i++, commodityDetails.getUpdatedBy());// updated_by
+				ps.setTimestamp(i++, commodityDetails.getUpdatedTimestamp());// updated_timestamp
 
 				return ps;
 			}, keyHolder);
@@ -166,6 +224,12 @@ public class RequestRepository extends RequestCommonsParams implements IRequestR
 		return 0;
 	}
 
+	/**
+	 * @apiNote: execute query: INSERT INTO `natraj`.`token_details`
+	 *           (`token_no`,`commodity_code`,`status`,`is_redeemed`,`bill_no`,`is_valid_till`,`created_by`,`created_timestamp`,`updated_by`,`updated_timestamp`)
+	 *           VALUES (?,?,?,?,?,?,?,?,?,?);
+	 * 
+	 */
 	@Override
 	public TokenDetails issueToken(TokenDetails tokenDetails) throws IOException {
 
@@ -179,13 +243,13 @@ public class RequestRepository extends RequestCommonsParams implements IRequestR
 			// ``,``,``,``,``,``,``,``,``,``,``,``,``) VALUES (?,?,?,?,?,?,?,?,?,?,?
 
 			jdbcTemplate.update(connection -> {
-				PreparedStatement ps = connection.prepareStatement(AppConstant.INSERT_USER_REQUEST,
+				PreparedStatement ps = connection.prepareStatement(AppConstant.INSERT_TOKEN_REQUEST,
 						PreparedStatement.RETURN_GENERATED_KEYS);
 
 				int i = 1;
 
 				ps.setBigDecimal(i++, new BigDecimal(tokenDetails.getTokenNo()));// token no
-				ps.setString(i++, tokenDetails.getCommodityCode());// commodity code
+
 				ps.setString(i++, tokenDetails.getStatus()); // status
 				ps.setBoolean(i++, tokenDetails.getIsRedeemed());// is_redeemed
 				ps.setString(i++, tokenDetails.getBillNo());// bill no
@@ -198,6 +262,8 @@ public class RequestRepository extends RequestCommonsParams implements IRequestR
 				ps.setString(i++, tokenDetails.getUpdatedBy());// updated_by
 				ps.setTimestamp(i++, tokenDetails.getUpdatedTimestamp());// updated_timestamp
 
+				ps.setString(i++, tokenDetails.getCommodityCode());// commodity code
+
 				return ps;
 			}, keyHolder);
 
@@ -207,9 +273,12 @@ public class RequestRepository extends RequestCommonsParams implements IRequestR
 			LOG.error("Into exception while inserting tokenDetails details req with message:{}", e.getMessage());
 		}
 
-		tokenDetails.setId(retval.longValue());
+		if (retval == null)
+			tokenDetails.setId(-1 * 1L);
+		else
+			tokenDetails.setId(retval.longValue());
 		LOG.info("Request processed for inserting tokenDetails details with generated Id:{} with  details:{}",
-				retval.longValue(), tokenDetails.toString());
+				tokenDetails.getId(), tokenDetails.toString());
 		return tokenDetails;
 
 	}
@@ -232,79 +301,97 @@ public class RequestRepository extends RequestCommonsParams implements IRequestR
 		return 0;
 	}
 
-	@Override
-	public Transaction transact(Transaction txn) throws IOException {
+	/**
+	 * @param txn
+	 * @param token
+	 * @return
+	 * @throws IOException
+	 */
+	public Map<String, Long> transact(SaveTxnVO txn, TokenCommodityRec token) throws IOException {
 
 		LOG.info("Request recieved for inserting Transaction details for details:{}", txn.toString());
 
+		Map<String, Long> retval = new HashMap<>();
 		transactionTemplate.execute(status -> {
 			try {
-				jdbcTemplate.update(
-						"INSERT INTO transactions (from_user_id,to_user_id,token_no,points_accrued,total_points,event_type,event_name,commodity_code,remarks,created_by,created_timestamp,updated_by,updated_timestamp) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)",
-						txn.getFromUserId(), txn.getToUserId(), txn.getTokenNo(), txn.getPointsAccrued(),
-						txn.getTotalPoints(), txn.getEventType(), txn.getEventName(), txn.getCommodityCode(),
-						txn.getRemarks(), getCreatedBy(), getCreatedTs(), getUpdatedBy(), getUpdatedTs());
+				Long txnId = AppConstant.DEF_TOKEN;
+				KeyHolder keyHolder = new GeneratedKeyHolder();
 
-				int txnId = getLastInsertedId();
+				jdbcTemplate.update(connection -> {
+					PreparedStatement ps = connection.prepareStatement(AppConstant.INSERT_TRANSACTION,
+							PreparedStatement.RETURN_GENERATED_KEYS);
+
+					int i = 1;
+					ps.setString(i++, txn.getFromUserId());
+					ps.setString(i++, "SYSTEM");
+					ps.setLong(i++, txn.getTokenNo().longValue());
+					ps.setFloat(i++, token.getPointsGen());
+					ps.setInt(i++, -1);
+					ps.setString(i++, txn.getEventType());
+					ps.setString(i++, txn.getEventName());
+					ps.setString(i++, token.getCommodityCode());
+					ps.setString(i++, txn.getRemarks());
+
+					ps.setString(i++, getCreatedBy());
+					ps.setTimestamp(i++, getCreatedTs());
+					ps.setString(i++, getUpdatedBy());
+					ps.setTimestamp(i++, getUpdatedTs());
+
+					return ps;
+				}, keyHolder);
+
+				txnId = (Long) keyHolder.getKey();
+				retval.put(AppConstant.TXN_ID, txnId);
+
+//				jdbcTemplate.update(
+//						"INSERT INTO transactions (from_user_id,to_user_id,token_no,points_accrued,total_points,event_type,event_name,commodity_code,remarks,created_by,created_timestamp,updated_by,updated_timestamp) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)",
+//						txn.getFromUserId(), "SYSTEM", txn.getTokenNo(), token.getPointsGen(), -1, txn.getEventType(),
+//						txn.getEventName(), token.getCommodityCode(), txn.getRemarks(), getCreatedBy(), getCreatedTs(),
+//						getUpdatedBy(), getUpdatedTs());
+//
+//				int txnId = getLastInsertedId();
 				String eventName = USER_EVENTS.TRANSACT.name();
 				String eventType = CacheManager.getEvent(eventName).getEventType();
 
-				txn.setId(txnId * 1L);
+				// txn.setId(txnId * 1L);
 
-				jdbcTemplate.update(
-						"INSERT INTO natraj.audit_log (event_name,event_type,transaction_id,remarks,user_id,created_by,created_timestamp,updated_by,updated_timestamp) VALUES (?,?,?,?,?,?,?,?,?)",
-						eventName, eventType, txnId, txn.getRemarks(), txn.getFromUserId(), getCreatedBy(),
-						getCreatedTs(), getUpdatedBy(), getUpdatedTs());
+//				jdbcTemplate.update(
+//						"INSERT INTO natraj.audit_log (event_name,event_type,transaction_id,remarks,user_id,created_by,created_timestamp,updated_by,updated_timestamp) VALUES (?,?,?,?,?,?,?,?,?)",
+//						eventName, eventType, txnId, txn.getRemarks(), txn.getFromUserId(), getCreatedBy(),
+//						getCreatedTs(), getUpdatedBy(), getUpdatedTs());
+				final Long txnAudit = txnId;
+				Long auditId = AppConstant.DEF_TOKEN;
+				jdbcTemplate.update(connection -> {
+					PreparedStatement ps = connection.prepareStatement(AppConstant.INSET_AUDIT_LOG,
+							PreparedStatement.RETURN_GENERATED_KEYS);
 
-				return txn;
+					int i = 1;
+					ps.setString(i++, eventName);
+					ps.setString(i++, eventType);
+					ps.setLong(i++, txnAudit);
+					ps.setString(i++, txn.getRemarks());
+					ps.setString(i++, txn.getFromUserId());
+
+					ps.setString(i++, getCreatedBy());
+					ps.setTimestamp(i++, getCreatedTs());
+					ps.setString(i++, getUpdatedBy());
+					ps.setTimestamp(i++, getUpdatedTs());
+
+					return ps;
+				}, keyHolder);
+
+				auditId = (Long) keyHolder.getKey();
+
+				retval.put(AppConstant.AUDIT_ID, auditId);
+				return 1;
 			} catch (Exception e) {
 				status.setRollbackOnly();
-				return txn;
+				retval.put(AppConstant.ERROR_ID, AppConstant.DEF_TOKEN);
 			}
+			return 1;
 		});
 
-//		BigInteger retval = new BigInteger("-1");
-//		KeyHolder keyHolder = new GeneratedKeyHolder();
-//
-//		try {
-//
-//			// ``,``,``,``,``,``,``,``,``,``,``,``,``) VALUES (?,?,?,?,?,?,?,?,?,?,?
-//
-//			jdbcTemplate.update(connection -> {
-//				PreparedStatement ps = connection.prepareStatement(AppConstant.INSERT_USER_REQUEST,
-//						PreparedStatement.RETURN_GENERATED_KEYS);
-//
-//				int i = 1;
-//
-//				ps.setString(i++, txn.getFromUserId());// from_user_id
-//				ps.setString(i++, txn.getToUserId());// to_user_id
-//				ps.setBigDecimal(i++, new BigDecimal(txn.getTokenNo())); // token_no
-//				ps.setFloat(i++, txn.getPointsAccrued());// points_accrued
-//				ps.setFloat(i++, txn.getTotalPoints());// total_points
-//
-//				ps.setString(i++, txn.getEventType());// event_type
-//				ps.setString(i++, txn.getEventName());// event_name
-//				ps.setString(i++, txn.getCommodityCode());// commodity_code
-//				ps.setString(i++, txn.getRemarks());// remarks
-//
-//				ps.setString(i++, txn.getCreatedBy());// created_by
-//				ps.setTimestamp(i++, txn.getCreatedTimestamp());// created_timestamp
-//				ps.setString(i++, txn.getUpdatedBy());// updated_by
-//				ps.setTimestamp(i++, txn.getUpdatedTimestamp());// updated_timestamp
-//
-//				return ps;
-//			}, keyHolder);
-//
-//			retval = (java.math.BigInteger) keyHolder.getKey();
-//
-//		} catch (Exception e) {
-//			LOG.error("Into exception while inserting Transaction details req with message:{}", e.getMessage());
-//		}
-//
-//		txn.setId(retval.longValue());
-//		LOG.info("Request processed for inserting Transaction details with generated Id:{} with  details:{}",
-//				retval.longValue(), txn.toString());
-		return txn;
+		return retval;
 
 	}
 
@@ -312,6 +399,61 @@ public class RequestRepository extends RequestCommonsParams implements IRequestR
 	public int redeem(String jsonBody) throws IOException {
 		// TODO Auto-generated method stub
 		return 0;
+	}
+
+	@Transactional
+	public Map<String, Long> saveUserTransaction(SaveTxnVO txn, TokenCommodityRec tokens) {
+
+		LOG.info("Save user transaction with txn: {}, token: {}", txn, tokens);
+		Map<String, Long> retval = new HashMap<String, Long>();
+
+		Long txnId = saveTransaction(txn, tokens);
+		retval.put(AppConstant.TXN_ID, txnId);
+		LOG.debug("Save user transaction with txn: {}, token: {}, txnId: {}", txn, tokens, txnId);
+
+		Long auditLogId = saveAudit(txnId, txn);
+		retval.put(AppConstant.AUDIT_ID, auditLogId);
+		LOG.debug("Save user transaction with txn: {}, token: {}, txnId: {}, auditLogId: {}", txn, tokens, txnId,
+				auditLogId);
+
+		return retval;
+	}
+
+	/**
+	 * @param eventName
+	 * @param eventType
+	 * @param txnAudit
+	 * @param txn
+	 * @return
+	 */
+	private Long saveAudit(Long txnAudit, SaveTxnVO txn) {
+
+		Long txnId = AppConstant.DEF_TOKEN;
+		KeyHolder keyHolder = new GeneratedKeyHolder();
+
+		Long auditId = AppConstant.DEF_TOKEN;
+		jdbcTemplate.update(connection -> {
+			PreparedStatement ps = connection.prepareStatement(AppConstant.INSET_AUDIT_LOG,
+					PreparedStatement.RETURN_GENERATED_KEYS);
+
+			int i = 1;
+			ps.setString(i++, txn.getEventName());
+			ps.setString(i++, txn.getEventType());
+			ps.setLong(i++, txnAudit);
+			ps.setString(i++, txn.getRemarks());
+			ps.setString(i++, txn.getFromUserId());
+
+			ps.setString(i++, getCreatedBy());
+			ps.setTimestamp(i++, getCreatedTs());
+			ps.setString(i++, getUpdatedBy());
+			ps.setTimestamp(i++, getUpdatedTs());
+
+			return ps;
+		}, keyHolder);
+
+		auditId = ((BigInteger) keyHolder.getKey()).longValue();
+
+		return auditId;
 	}
 
 	@Override
@@ -348,6 +490,43 @@ public class RequestRepository extends RequestCommonsParams implements IRequestR
 	public int queryUserTxn(String jsonBody) throws IOException {
 		// TODO Auto-generated method stub
 		return 0;
+	}
+
+	/**
+	 * @param txn
+	 * @param token
+	 * @return
+	 */
+	private Long saveTransaction(SaveTxnVO txn, TokenCommodityRec token) {
+		Long txnId = AppConstant.DEF_TOKEN;
+		KeyHolder keyHolder = new GeneratedKeyHolder();
+
+		jdbcTemplate.update(connection -> {
+			PreparedStatement ps = connection.prepareStatement(AppConstant.INSERT_TRANSACTION,
+					PreparedStatement.RETURN_GENERATED_KEYS);
+
+			int i = 1;
+			ps.setString(i++, txn.getFromUserId());
+			ps.setString(i++, "SYSTEM");
+			ps.setLong(i++, txn.getTokenNo().longValue());
+			ps.setFloat(i++, token.getPointsGen());
+			ps.setInt(i++, -1);
+			ps.setString(i++, txn.getEventType());
+			ps.setString(i++, txn.getEventName());
+			ps.setString(i++, token.getCommodityCode());
+			ps.setString(i++, txn.getRemarks());
+
+			ps.setString(i++, getCreatedBy());
+			ps.setTimestamp(i++, getCreatedTs());
+			ps.setString(i++, getUpdatedBy());
+			ps.setTimestamp(i++, getUpdatedTs());
+
+			return ps;
+		}, keyHolder);
+
+		txnId = ((BigInteger) keyHolder.getKey()).longValue();
+
+		return txnId;
 	}
 
 	/**
@@ -456,6 +635,30 @@ public class RequestRepository extends RequestCommonsParams implements IRequestR
 				retval.longValue(), eventDetails.toString());
 		return eventDetails;
 
+	}
+
+	/**
+	 * @implSpec: execute query: select td.token_no, td.commodity_code,
+	 *            cd.commodity_type, cd.points_generated,cd.description from
+	 *            natraj.token_details td, natraj.commodity_details cd where
+	 *            cd.commodity_code = td.commodity_code and cd.status = 1 and
+	 *            td.is_redeemed = 0 and td.status = 'A' and td.token_no = ?
+	 * @param tokenNo
+	 * @return
+	 */
+	public TokenCommodityRec getTokenDetails(BigInteger tokenNo) {
+
+		TokenCommodityRec retval = new TokenCommodityRec();
+		Optional<TokenCommodityRec> resp = jdbcTemplate
+				.query(AppConstant.GET_TOKEN_DETAILS, new TokenRecMapper(), tokenNo).stream().findFirst();
+
+		if (!resp.isPresent())
+			retval.setTokenNo(AppConstant.DEF_TOKEN);
+		else
+			retval = resp.get();
+
+		LOG.info("For tokenNo:{}, details are {}", tokenNo, retval.toString());
+		return retval;
 	}
 
 }
