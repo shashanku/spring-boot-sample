@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.google.gson.Gson;
 import com.nector.alpha.uno.common.ApplicationHeaders;
+import com.nector.alpha.uno.entity.ApprovalDetailsReq;
 import com.nector.alpha.uno.entity.CommodityDetails;
 import com.nector.alpha.uno.entity.EventDetails;
 import com.nector.alpha.uno.entity.TenantDetails;
@@ -148,10 +149,13 @@ public class CommonController {
 	 * @return
 	 */
 	@PostMapping("/txn/list")
-	public Object listTransaction(@RequestBody EventDetails eventDetails, @RequestHeader Map<String, String> allHeaders)
-			throws IOException {
+	public Object listTransaction(@RequestBody ApprovalDetailsReq approvalDetails,
+			@RequestHeader Map<String, String> allHeaders) throws IOException {
 
-		return commonService.saveEvent(eventDetails);
+		String apiKey = allHeaders.get(ApplicationHeaders.X_API_KEY);
+		LOG.info("Request recieved with APIKEY: {} with User input: {}", apiKey, approvalDetails.toString());
+
+		return commonService.queryUserTransactions(approvalDetails);
 	}
 
 	@PostMapping("/login")
@@ -172,10 +176,12 @@ public class CommonController {
 	 * @return
 	 */
 	@PostMapping("/user/approvals")
-	public Object pendingApprovals(@RequestBody EventDetails eventDetails,
+	public Object pendingApprovals(@RequestBody ApprovalDetailsReq approvalDetails,
 			@RequestHeader Map<String, String> allHeaders) throws IOException {
+		String apiKey = allHeaders.get(ApplicationHeaders.X_API_KEY);
+		LOG.info("Request recieved with APIKEY", apiKey);
 
-		return commonService.saveEvent(eventDetails);
+		return commonService.getPendingApprovals(approvalDetails);
 	}
 
 	@GetMapping("/report/admin")

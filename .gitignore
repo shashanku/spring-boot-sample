@@ -12,7 +12,7 @@ bin/**
 tmp/**
 tmp/**/*
 *.tmp
-*.properties
+application.properties
 *.bak
 *.swp
 *~.nib

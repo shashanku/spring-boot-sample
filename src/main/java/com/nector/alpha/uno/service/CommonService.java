@@ -1,38 +1,41 @@
 package com.nector.alpha.uno.service;
 
-import java.io.Console;
 import java.io.IOException;
+import java.math.BigInteger;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-import org.apache.http.util.TextUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import com.google.gson.Gson;
 import com.nector.alpha.uno.common.AppConstant;
 import com.nector.alpha.uno.common.CacheManager;
 import com.nector.alpha.uno.common.CommonResponse;
+import com.nector.alpha.uno.entity.ApprovalDetailsReq;
 import com.nector.alpha.uno.entity.CommodityDetails;
 import com.nector.alpha.uno.entity.EventDetails;
+import com.nector.alpha.uno.entity.PendingApprovalRec;
 import com.nector.alpha.uno.entity.TenantDetails;
 import com.nector.alpha.uno.entity.TokenCommodityRec;
 import com.nector.alpha.uno.entity.TokenDetails;
 import com.nector.alpha.uno.entity.UserDetails;
+import com.nector.alpha.uno.entity.UserDetailsRec;
+import com.nector.alpha.uno.entity.UserDetailsResponse;
 import com.nector.alpha.uno.interfaces.ICommonService;
 import com.nector.alpha.uno.repository.RequestRepository;
 import com.nector.alpha.uno.repository.TenantApiKeyRecord;
+import com.nector.alpha.uno.repository.TxnDTO;
 import com.nector.alpha.uno.req.SaveTxnVO;
 
 @Service
 public class CommonService implements ICommonService {
 	private static final Logger LOG = LogManager.getLogger(CommonService.class);
-	private static final Gson gson = new Gson();
+	// private static final Gson gson = new Gson();
 
 	@Autowired
 	private RequestRepository reqRepository;
@@ -137,6 +140,19 @@ public class CommonService implements ICommonService {
 	}
 
 	/**
+	 * @param approvalDetailsReq
+	 * @return
+	 */
+	public List<PendingApprovalRec> getPendingApprovals(ApprovalDetailsReq approvalDetailsReq) {
+		LOG.info("User request with ApprovalDetailsReq details: {}", approvalDetailsReq.toString());
+
+		List<PendingApprovalRec> pendingApprovalList = reqRepository
+				.getApprovalDetails(BigInteger.valueOf(approvalDetailsReq.getId()), "1");
+
+		return pendingApprovalList;
+	}
+
+	/**
 	 * @param tokenDetails
 	 * @return
 	 * @throws IOException
@@ -153,5 +169,28 @@ public class CommonService implements ICommonService {
 
 		commodityDetails.setAudits(user, new Timestamp(System.currentTimeMillis()));
 		return reqRepository.saveCommodity(commodityDetails);
+	}
+
+	/**
+	 * @param approvalDetails
+	 * @return
+	 */
+	public Object queryUserTransactions(ApprovalDetailsReq approvalDetails) {
+
+		LOG.info("User request with commodity details: {}", approvalDetails.toString());
+		UserDetailsResponse userDetailsResp = new UserDetailsResponse();
+
+		UserDetailsRec userDetailsRec = reqRepository.getUserDetails(BigInteger.valueOf(approvalDetails.getId()), "1");
+		if (userDetailsRec == null) {
+			LOG.error("No details found for record: {}", approvalDetails.toString());
+		}
+
+		List<TxnDTO> txnList = reqRepository
+				.getTransactionListForUserUserDetails(BigInteger.valueOf(approvalDetails.getId()), "1");
+
+		LOG.info("User request with txn list size: {}", txnList.size());
+
+		userDetailsResp = new UserDetailsResponse(userDetailsRec, txnList);
+		return userDetailsResp;
 	}
 }

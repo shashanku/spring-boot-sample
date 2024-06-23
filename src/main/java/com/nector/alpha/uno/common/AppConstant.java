@@ -18,8 +18,16 @@ public class AppConstant {
 	public static final String EMPTY = "";
 
 	public static final String DEFAULT_OTP = "0000";
-
 	public static final String X_REQUEST_ID = "requestId";
+
+	public static enum USER_TYPE {
+		P, A, M, R, D
+	} // {Producer, Admin, Mechanic, Retailer, Distributor
+
+	public static enum STATUS {
+		A, D //
+
+	}
 
 	public static enum USER_EVENTS {
 		CREATE_USER, APPROVE_USER, CREATE_COMMODITY, UPDATE_COMMODITY, ISSUE_TOKEN, DELETE_TOKEN, UPDATE_EXCHANGE_RATE,
@@ -65,6 +73,11 @@ public class AppConstant {
 	public static final String INSERT_COMMODITY_REQUEST = "INSERT INTO `natraj`.`commodity_details` (`commodity_code`,`commodity_type`,`description`,`points_generated`,`status`,`created_by`,`created_timestamp`,`updated_by`,`updated_timestamp`) VALUES (?,?,?,?,?,?,?,?,?)";
 
 	public static final String GET_TOKEN_DETAILS = "select td.token_no, td.commodity_code, cd.commodity_type,  cd.points_generated,cd.description from natraj.token_details td, natraj.commodity_details cd where cd.commodity_code = td.commodity_code  and cd.status = 1 and td.is_redeemed = 0 and td.status = 'A' and td.token_no = ?";
+	public static final String GET_PENDING_APPROVALS = "select name, email, user_id, contact, user_address, total_points from natraj.user_details where is_approved = 0 and reports_to = ? and tenant_id = ?";
+
+	public static final String GET_USER_DETAILS = "select name, email, user_id, contact, user_address, total_points, is_approved from natraj.user_details where user_id = ? and tenant_id = ?";
+	public static final String GET_TXN_FOR_USER = "select t.id, t.created_timestamp, t.token_no, t.points_accrued, t.commodity_code from natraj.transactions t where t.event_name = 'SAVE_TRANSACTION' and from_user_id = ?  order by created_timestamp desc";
+
 	public static final String INSERT_TRANSACTION = "INSERT INTO transactions (from_user_id,to_user_id,token_no,points_accrued,total_points,event_type,event_name,commodity_code,remarks,created_by,created_timestamp,updated_by,updated_timestamp) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)";
 	public static final String INSET_AUDIT_LOG = "INSERT INTO natraj.audit_log (event_name,event_type,transaction_id,remarks,user_id,created_by,created_timestamp,updated_by,updated_timestamp) VALUES (?,?,?,?,?,?,?,?,?)";
 	public static final Long DEF_TOKEN = -1 * 1L;

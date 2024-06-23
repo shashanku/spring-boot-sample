@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.sql.PreparedStatement;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -27,10 +28,12 @@ import com.nector.alpha.uno.common.CacheManager;
 import com.nector.alpha.uno.entity.CommodityDetails;
 import com.nector.alpha.uno.entity.Employee;
 import com.nector.alpha.uno.entity.EventDetails;
+import com.nector.alpha.uno.entity.PendingApprovalRec;
 import com.nector.alpha.uno.entity.TenantDetails;
 import com.nector.alpha.uno.entity.TokenCommodityRec;
 import com.nector.alpha.uno.entity.TokenDetails;
 import com.nector.alpha.uno.entity.UserDetails;
+import com.nector.alpha.uno.entity.UserDetailsRec;
 import com.nector.alpha.uno.req.SaveTxnVO;
 
 import jakarta.transaction.Transactional;
@@ -658,6 +661,81 @@ public class RequestRepository extends RequestCommonsParams implements IRequestR
 			retval = resp.get();
 
 		LOG.info("For tokenNo:{}, details are {}", tokenNo, retval.toString());
+		return retval;
+	}
+
+	/**
+	 * @implSpec: execute query: select name, email, user_id, contact, address,
+	 *            total_points from natraj.user_details where is_approved = 0 and
+	 *            reports_to = ? and tenant_id = ?
+	 * 
+	 * @param userId
+	 * @param tenantId
+	 * @return
+	 */
+	public List<PendingApprovalRec> getApprovalDetails(BigInteger userId, String tenantId) {
+
+		List<PendingApprovalRec> retval = new ArrayList<PendingApprovalRec>();
+		Optional<List<PendingApprovalRec>> resp = jdbcTemplate
+				.query(AppConstant.GET_PENDING_APPROVALS, new PendingApprovalMapper(), userId, tenantId).stream()
+				.findFirst();
+
+		if (resp.isPresent())
+			retval = resp.get();
+
+		LOG.info("For userId:{}, tenantId: {}, pending approvals are {}", userId, tenantId, retval.toString());
+		return retval;
+	}
+
+	/**
+	 * @implSpec: execute query: select name, email, user_id, contact, user_address,
+	 *            total_points, is_approved from natraj.user_details where user_id=?
+	 *            and tenant_id=?
+	 * 
+	 * @param userId
+	 * @param tenantId
+	 * @return
+	 */
+	public UserDetailsRec getUserDetails(BigInteger userId, String tenantId) {
+		LOG.info("Query user with userId: {}, tenant:{}", userId, tenantId);
+
+		UserDetailsRec retval = new UserDetailsRec();
+		Optional<UserDetailsRec> resp = jdbcTemplate
+				.query(AppConstant.GET_USER_DETAILS, new UserDetailsMapper(), userId, tenantId).stream().findFirst();
+
+		if (resp.isPresent())
+			retval = resp.get();
+		else {
+			LOG.error("Query user with userId: {}, tenant:{} with NO RECORD FOUND", userId, tenantId);
+			return null;
+		}
+
+		LOG.info("For getUserDetails userId:{}, tenantId: {}, user details are {}", userId, tenantId,
+				retval.toString());
+		return retval;
+	}
+
+	/**
+	 * @implSpec: execute query: select t.id, t.created_timestamp, t.token_no,
+	 *            t.points_accrued, t.commodity_code from natraj.transactions t
+	 *            where t.event_name = 'SAVE_TRANSACTION' and from_user_id = ?;
+	 * 
+	 * @param userId
+	 * @param tenantId
+	 * @return
+	 */
+	public List<TxnDTO> getTransactionListForUserUserDetails(BigInteger userId, String tenantId) {
+		LOG.info("Query user with userId: {}, tenant:{}", userId, tenantId);
+
+		List<TxnDTO> retval = new ArrayList<TxnDTO>();
+		Optional<List<TxnDTO>> resp = jdbcTemplate.query(AppConstant.GET_TXN_FOR_USER, new TxnDetailsMapper(), userId)
+				.stream().findFirst();
+
+		if (resp.isPresent())
+			retval = resp.get();
+
+		LOG.info("For getUserDetails userId:{}, tenantId: {}, user details are {}", userId, tenantId,
+				retval.toString());
 		return retval;
 	}
 
